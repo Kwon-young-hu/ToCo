@@ -4,7 +4,9 @@ import os
 import sys
 import subprocess
 
-#FW_PRINTENV = 'fw_printenv'
+from env import *
+from misc import *
+
 FW_PRINTENV_ACTIVE_PART = 'fw_printenv active_part'
 FW_SETENV = 'fw_setenv'
 ACTIVE_PART = 'active_part'
@@ -22,22 +24,28 @@ PATH_DEV_MTD2 = '/dev/mtd2 '
 FLASH_ERASE = 'flash_erase '
 NAND_WRITE = 'nandwrite '
 
+EXIT_OPTION = '0'
+RETURN_OPTION = '1'
+
 def subprocess_open(command):
     popen = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     (stdoutdata, stderrdata) = popen.communicate()
     returncode = popen.poll()
     return stdoutdata, stderrdata, returncode
 
-def simple_error_response(code, error):
+def simple_error_response(code, error,end_option=EXIT_OPTION):
     print('An invalid result code was returned (error code: ' + str(code) + ')')
     print('Error message : ' + str(error))
-    sys.exit(-1)
-
+    if end_option = RETURN_OPTION:
+	return None
+    else:
+	sys.exit(-1)
+    
 def get_uci(conf_file, conf_section, conf_option):
     uci_cmd = '.'.join([conf_file, conf_section, conf_option])
     output, error, code = subprocess_open(UCI_GET_CMD + uci_cmd)
     if not code == 0:
-	return simple_error_response(code, error)
+	return simple_error_response(code, error, RETURN_OPTION)
 
     if '\n' in output:
 	output = output.replace('\n','')
@@ -48,7 +56,7 @@ def get_os_image_from_tftp(file_name, server_addr):
     print(TFTP_GET_CMD + file_name + ' ' + server_addr)
     output, error, code = subprocess_open(TFTP_GET_CMD + file_name + ' ' + server_addr)
     if not code == 0:
-	return simple_error_response(code,error)
+	return simple_error_response(code, error)
 
 class ConfigNand:
     '''
@@ -65,8 +73,8 @@ class ConfigNand:
     def erase(self):
 	print(FLASH_ERASE + self.conf_part + '0 0')
 	#output, error, code = subprocess_open(FLASH_ERASE + self.conf_part + '0 0')
-	#if not code == 0:
-	    #return simple_error_response(code,error)
+	if not code == 0:
+	    return simple_error_response(code,error)
 
     def write(self,img):
 	if os.path.exists(img):
@@ -81,7 +89,7 @@ class ConfigEnv:
     def get_active_part(self):
 	output, error, code = subprocess_open(FW_PRINTENV_ACTIVE_PART)
 	if not code == 0:
-	    return simple_error_response(code,error)
+	    return simple_error_response(code, error)
 	else:
 	    part_num = output.split('=')[1].replace('\n','')
 	    return part_num
@@ -92,9 +100,9 @@ class ConfigEnv:
 	'''
 	active_part = ' '.join([FW_SETENV, ACTIVE_PART, part_num])
 	print(active_part)
-	#output, error, code = subprocess_open(active_part)
-	#if not code == 0:
-	    #return simple_error_response(code,error)
+	output, error, code = subprocess_open(active_part)
+	if not code == 0:
+	    return simple_error_response(code, error)
 
 
 if __name__ == "__main__":
@@ -103,8 +111,8 @@ if __name__ == "__main__":
     server_ip = get_uci('system', 'upgrade','server')
     upgrade_type = get_uci('system', 'upgrade','type')
    
-    if not file_name and server_ip and upgrade_type:
-	print('System upgrade information is unusual')
+    if not file_name or server_ip or upgrade_type:
+	print('**System upgrade uci information is unusual**')
 	sys.exit(-1)
 
     if upgrade_type == '1':
@@ -128,41 +136,5 @@ if __name__ == "__main__":
     elif upgrade_type == '0':
 	print('To-Do...')
 
-'''
-def dequote(s):
-    if(s[0] == s[-1]) and s.startswith(("'",'"')):
-	return s[1:-1]
-    return s
-
-def show_uci(conf_file, conf_name):
-    uci_data = dict()
-
-    output, error, code = subprocess_open(UCI_SHOW_CMD + conf_file + conf_name)
-    if not code == 0:
-        print('An invalid result code was returned (error code: ' + str(code) + ')')
-
-    elif error: return None
-
-    data = list_to_dict(output, EQUAL_DELIMITER)
-    for key, val in data.items():
-	uci_str = conf_file + conf_name + '.'
-
-	if uci_str in key:
-	    uci_key = key.replace(uci_str,'')
-	    uci_data[uci_key] = dequote(val)
-    
-    return uci_data
-    
-def list_to_dict(data, delimiter):
-    data_dict = dict()
-    lines = data.splitlines()
-    
-    for line in lines:
-	tokens = line.split(delimiter)
-	data_dict[tokens[0]] = tokens[1]
-
-    return data_dict
-
-'''
 
 
