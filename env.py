@@ -46,3 +46,13 @@ RETURN_OPTION = '1'
 EQUAL_DELIMITER = '='
 
 PKILL_CMD = "pkill -ef "
+
+'''
+TIMEZONE 
+'''
+LN_CMD = "ln -sf "
+ZONEINFO_PATH = "/usr/share/zoneinfo"
+LOCALTIME_PATH = " /etc/localtime"
+
+UTC = "/UTC"
+ASIA_SEOUL = "/Asia/Seoul"

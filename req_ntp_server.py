@@ -35,16 +35,27 @@ def sync_time_ntp_server(ntp_domain):
 	    sleep(FIVE_MINUTE)
     return flag
 
+def set_time_offset(timezone):
+    if os.path.exists(ZONEINFO_PATH + timezone):
+	subprocess_open(LN_CMD + ZONEINFO_PATH + timezone + LOCALTIME_PATH)
+	print("Set time offset to " + timezone)
+    else:
+	subprocess_open(LN_CMD + ZONEINFO_PATH + UTC + LOCALTIME_PATH)   
+	print("Not found timezone, Set time offset to default " + UTC)
+
 if __name__ == "__main__":
     ntp_data = show_uci(SYSTEM_CMD, NTP_CMD)
     try:
         activate = ntp_data['activate']
         poling_rate = int(ntp_data['poling'])*60
+	timezone = ntp_data['timezone']
 	ntp0_domain = ntp_data['serverdomain0']
     	ntp1_domain = ntp_data['serverdomain1']
     except:
         print("**System Ntp uci information is unusaul**")
         sys.exit(-1)
+
+    set_time_offset(timezone)
 
     if not activate == "1":
 	print("ntp is not activated")
