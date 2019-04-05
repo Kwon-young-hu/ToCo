@@ -27,7 +27,7 @@ read_shell_output(char *cmd, char *buf)
 }
 
 static int
-system_shell(char *cmd)
+eval(char *cmd)
 {
     int status;
     status = system(cmd);
@@ -54,7 +54,7 @@ tftp_image_download(char *filename, char *serverip)
     }
     sprintf(cmdbuf, "tftp -gr %s %s", filename, serverip);
     printf("%s\n",cmdbuf);
-    return 0;//system_shell(cmdbuf);
+    return 0;//eval(cmdbuf);
 }
 
 static int 
@@ -64,7 +64,7 @@ nand_flash_erase(char *mtd_part)
 
     sprintf(strbuf,"flash_erase %s 0 0", mtd_part);
     printf("%s\n",strbuf);
-    return 0;//system_shell(strbuf);
+    return 0;//eval(strbuf);
 }
 
 static int 
@@ -74,7 +74,7 @@ nand_flash_write(char *mtd_part, char *img)
 
     sprintf(strbuf,"nandwrite %s -p %s", mtd_part, img);
     printf("%s\n",strbuf);
-    return 0;//system_shell(strbuf);    
+    return 0;//eval(strbuf);    
 }
 
 static int 
@@ -136,7 +136,7 @@ int main(void)
     }
     sprintf(cmdbuf,"fw_setenv active_part %d", part_num);
     printf("%s\n",cmdbuf);
-    /*if (system_shell(cmdbuf) !=0){
+    /*if (eval(cmdbuf) !=0){
       printf("active_part set error\n");
       return (-1);
       }*/
